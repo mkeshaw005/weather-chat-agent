@@ -6,7 +6,7 @@ from typing import List
 
 from .service import ChatService, warmup
 
-app = FastAPI(title="Azure Chat Demo API", version="1.0.0")
+app = FastAPI(title="Azure Chat Demo API", version="1.0.1")
 
 
 class ChatRequest(BaseModel):
@@ -34,7 +34,9 @@ async def healthz() -> dict:
 @app.post("/chat", response_model=ChatResponse)
 async def chat(req: ChatRequest) -> ChatResponse:
     try:
-        answer, session_id = await ChatService.instance().ask(req.question, req.session_id)
+        answer, session_id = await ChatService.instance().ask(
+            req.question, req.session_id
+        )
         return ChatResponse(answer=answer, session_id=session_id)
     except Exception as e:  # Log appropriately in production
         raise HTTPException(status_code=500, detail=str(e))
