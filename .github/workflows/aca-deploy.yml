@@ -79,6 +79,25 @@ jobs:
             -n "$CONTAINER_APP_NAME" \
             --image "${ACR_LOGIN_SERVER}/${IMAGE_NAME}:${GITHUB_SHA}"
 
+      - name: Post-deploy health check
+        shell: bash
+        run: |
+          set -euo pipefail
+          FQDN=$(az containerapp show -g "$RESOURCE_GROUP" -n "$CONTAINER_APP_NAME" --query properties.configuration.ingress.fqdn -o tsv)
+          echo "Checking health at: https://$FQDN/healthz"
+          # Retry for up to ~90s to allow revision activation and cold start
+          for i in {1..18}; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://$FQDN/healthz" || true)
+            if [ "$STATUS" = "200" ]; then
+              echo "Health check passed (HTTP 200)."
+              exit 0
+            fi
+            echo "Attempt $i/18: Got $STATUS. Waiting 5s before retry..."
+            sleep 5
+          done
+          echo "Health check failed: /healthz did not return 200 in time." >&2
+          exit 1
+
       - name: Show app FQDN
         shell: bash
         run: |
