@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# Venvs
+.venv/
+.env
+.env.*
+
+# Git & IDE
+.git/
+.gitignore
+*.swp
+*.swo
+.vscode/
+.idea/
+
+# Byte-compiled / cache
+.pytest_cache/
+.mypy_cache/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+build/
+dist/
+.eggs/
+*.egg-info/
+
+# Node (if any future UI)
+node_modules/

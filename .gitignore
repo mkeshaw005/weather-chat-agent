@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pytest_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Virtual envs
+.venv/
+venv/
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/
+
+# Local env & secrets
+.env
+.env.*
+
+# Local data
+/data/
+*.db
+
+# Node (if any future UI)
+node_modules/
+
+# Containers
+*.tar
+
+# Ignore compiled notebooks
+*.ipynb_checkpoints/

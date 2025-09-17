@@ -1,0 +1,8 @@
+python-dotenv==1.1.1
+azure-search-documents==11.5.3
+ipykernel==6.30.1
+langchain==0.3.27
+semantic-kernel==1.36.2
+azure-ai-agents>=1.2.0b3
+fastapi==0.112.2
+uvicorn[standard]==0.30.6
