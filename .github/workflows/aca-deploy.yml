@@ -41,7 +41,20 @@ jobs:
         shell: bash
         run: |
           if [ -z "${ACR_LOGIN_SERVER}" ]; then
-            ACR_LOGIN_SERVER=$(az acr show -n "$ACR_NAME" --query loginServer -o tsv)
+            # Try resolving within the specified Resource Group first (more precise)
+            set +e
+            ACR_LOGIN_SERVER=$(az acr show -n "$ACR_NAME" -g "$RESOURCE_GROUP" --query loginServer -o tsv 2>/dev/null)
+            if [ -z "$ACR_LOGIN_SERVER" ]; then
+              # Fallback: resolve by name across the subscription
+              ACR_LOGIN_SERVER=$(az acr show -n "$ACR_NAME" --query loginServer -o tsv 2>/dev/null)
+            fi
+            set -e
+            if [ -z "$ACR_LOGIN_SERVER" ]; then
+              echo "ERROR: Could not find ACR '$ACR_NAME' in subscription or resource group '$RESOURCE_GROUP'." >&2
+              echo "Available registries in this subscription:" >&2
+              az acr list -o table || true
+              exit 1
+            fi
             echo "ACR_LOGIN_SERVER=$ACR_LOGIN_SERVER" >> $GITHUB_ENV
           else
             echo "ACR_LOGIN_SERVER=$ACR_LOGIN_SERVER" >> $GITHUB_ENV
