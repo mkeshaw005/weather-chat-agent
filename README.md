@@ -53,6 +53,38 @@ AZURE_SEARCH_INDEX_NAME="<your-index-name>"
 
 The top-level `chat.py` uses the latest Semantic Kernel (1.x) agent pattern with a simple tool. Ensure your Azure OpenAI deployment name, endpoint, and key are set in the `.env` file.
 
+### Run the FastAPI API server
+
+This repository includes a FastAPI-based HTTP API under `app/api.py` with Pydantic models in `app/models.py`.
+
+Run the development server with uvicorn:
+
+```bash
+./.venv/bin/uvicorn app.api:app --reload
+```
+
+Once running, you can check:
+
+- Health check: `GET http://127.0.0.1:8000/healthz`
+- OpenAPI docs (Swagger UI): `http://127.0.0.1:8000/docs`
+
+The primary routes include:
+
+- `POST /chat` — Ask a question. Request/response schema: `ChatRequest`, `ChatResponse` from `app/models.py`.
+- `GET /sessions` — List sessions. Response schema: `SessionSummaryDTO` from `app/models.py`.
+- `GET /sessions/{session_id}/messages` — Get messages for a session. Response schema: `MessageDTO` from `app/models.py`.
+- `DELETE /sessions/{session_id}` — Delete a session.
+
+Example `curl` for chat:
+
+```bash
+curl -sS -X POST http://127.0.0.1:8000/chat \
+  -H 'Content-Type: application/json' \
+  -d '{"question":"Hello!","session_id":null}' | jq .
+```
+
+Note: The Pydantic DTOs have been moved out of `app/api.py` into `app/models.py` to keep route handlers focused and improve maintainability.
+
 ### Sample `.env`
 
 You can copy `.env.example` to `.env` and update values:

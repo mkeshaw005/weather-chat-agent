@@ -1,23 +1,17 @@
 from __future__ import annotations
 
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
 from typing import List
 
 from .service import ChatService, warmup
+from .models import (
+    ChatRequest,
+    ChatResponse,
+    SessionSummaryDTO,
+    MessageDTO,
+)
 
 app = FastAPI(title="Azure Chat Demo API", version="1.0.1")
-
-
-class ChatRequest(BaseModel):
-    question: str
-    session_id: str | None = None
-
-
-class ChatResponse(BaseModel):
-    answer: str
-    session_id: str
-
 
 @app.on_event("startup")
 async def on_startup() -> None:
@@ -40,20 +34,6 @@ async def chat(req: ChatRequest) -> ChatResponse:
         return ChatResponse(answer=answer, session_id=session_id)
     except Exception as e:  # Log appropriately in production
         raise HTTPException(status_code=500, detail=str(e))
-
-
-class SessionSummaryDTO(BaseModel):
-    id: str
-    title: str | None = None
-    created_at: str
-    updated_at: str
-
-
-class MessageDTO(BaseModel):
-    role: str
-    content: str
-    created_at: str
-
 
 @app.get("/sessions", response_model=List[SessionSummaryDTO])
 async def list_sessions(limit: int = 50, offset: int = 0) -> List[SessionSummaryDTO]:
