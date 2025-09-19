@@ -90,7 +90,11 @@ jobs:
           az containerapp update \
             -g "$RESOURCE_GROUP" \
             -n "$CONTAINER_APP_NAME" \
-            --image "${ACR_LOGIN_SERVER}/${IMAGE_NAME}:${GITHUB_SHA}"
+            --image "${ACR_LOGIN_SERVER}/${IMAGE_NAME}:${GITHUB_SHA}" \
+            --set-env-vars \
+            AUTH0_DOMAIN="${{ vars.AUTH0_DOMAIN }}" \
+            AUTH0_AUDIENCE="${{ vars.AUTH0_AUDIENCE }}" \
+            AUTH0_ISSUER="${{ vars.AUTH0_ISSUER }}"
 
       - name: Post-deploy health check
         shell: bash

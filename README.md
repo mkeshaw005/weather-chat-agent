@@ -85,6 +85,83 @@ curl -sS -X POST http://127.0.0.1:8000/chat \
 
 Note: The Pydantic DTOs have been moved out of `app/api.py` into `app/models.py` to keep route handlers focused and improve maintainability.
 
+## Auth0 Authentication
+
+All API endpoints except `GET /healthz` require a valid Bearer JWT issued by Auth0.
+
+### Required environment variables
+
+Add these to your `.env`:
+
+```
+# Auth0
+AUTH0_DOMAIN="<your-tenant>.us.auth0.com"
+AUTH0_AUDIENCE="<your-api-identifier>"  # e.g., https://api.example.com or a custom identifier you configured
+# Optional: override issuer; default is https://<AUTH0_DOMAIN>/
+# AUTH0_ISSUER="https://<your-tenant>.us.auth0.com/"
+```
+
+If `AUTH0_ISSUER` is not provided, the app uses:
+
+```
+https://<AUTH0_DOMAIN>/
+```
+
+### Configure Auth0
+
+1. Create an API in the Auth0 Dashboard:
+   - Auth0 Dashboard → Applications → APIs → Create API.
+   - Name: `weather-chat-agent-api` (example).
+   - Identifier: choose a unique value (this becomes your `AUTH0_AUDIENCE`), e.g., `https://api.weather-chat-agent.local`.
+   - Signing Algorithm: RS256 (default).
+2. Create an Application (the caller):
+   - Applications → Applications → Create Application.
+   - For machine-to-machine, choose M2M and authorize it to access your API.
+   - For SPA/native, configure allowed callbacks/origins as needed.
+3. Authorize permissions:
+   - For M2M, grant the application access to the API and enable required permissions/scopes (you can start without custom scopes; the API validates issuer/audience).
+
+### Obtain a token
+
+Machine-to-machine (Client Credentials):
+
+```bash
+curl --request POST \
+  --url https://$AUTH0_DOMAIN/oauth/token \
+  --header 'content-type: application/json' \
+  --data '{
+    "client_id": "<client-id>",
+    "client_secret": "<client-secret>",
+    "audience": "<your-api-identifier>",
+    "grant_type": "client_credentials"
+  }'
+```
+
+User auth (Authorization Code / PKCE) is typically handled in your frontend; use the token from Auth0 in the `Authorization` header when calling this API.
+
+### Call the API
+
+Include the token in the `Authorization` header:
+
+```bash
+TOKEN="<access_token>"
+curl -sS http://127.0.0.1:8000/sessions \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+The `/healthz` endpoint remains public:
+
+```bash
+curl -sS http://127.0.0.1:8000/healthz
+```
+
+### Troubleshooting auth
+
+- Ensure `AUTH0_DOMAIN` and `AUTH0_AUDIENCE` are set in `.env`.
+- The token's `iss` should be `https://<AUTH0_DOMAIN>/` and the `aud` should match your API Identifier exactly.
+- Ensure your API in Auth0 uses RS256 (as this API validates RS256 via JWKS).
+- If you rotate signing keys, JWKS caching may briefly require a restart or cache expiry.
+
 ### Sample `.env`
 
 You can copy `.env.example` to `.env` and update values:

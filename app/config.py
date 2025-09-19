@@ -19,6 +19,10 @@ class Settings:
     azure_openai_api_version: Optional[str] = None
     chat_db_path: str = "./data/chat.db"
     max_history_turns: int = 10
+    # Auth0 auth
+    auth0_domain: str | None = None
+    auth0_audience: str | None = None  # API Identifier configured in Auth0
+    auth0_issuer: str | None = None    # Optional override; defaults to https://<domain>/
 
 
 def get_settings() -> Settings:
@@ -34,6 +38,14 @@ def get_settings() -> Settings:
     except ValueError:
         max_history_turns = 10
 
+    # Auth0 configuration
+    auth0_domain = os.getenv("AUTH0_DOMAIN")
+    auth0_audience = os.getenv("AUTH0_AUDIENCE")
+    auth0_issuer = os.getenv("AUTH0_ISSUER")
+    if not auth0_issuer and auth0_domain:
+        # Note: auth0 issuer ends with a trailing slash
+        auth0_issuer = f"https://{auth0_domain}/"
+
     missing = [
         name
         for name, value in {
@@ -48,6 +60,21 @@ def get_settings() -> Settings:
             "Missing required environment variables: " + ", ".join(missing)
         )
 
+    # Require Auth0 settings as well (security requirement)
+    auth_missing = [
+        name
+        for name, value in {
+            "AUTH0_DOMAIN": auth0_domain,
+            "AUTH0_AUDIENCE": auth0_audience,
+        }.items()
+        if not value
+    ]
+    if auth_missing:
+        raise RuntimeError(
+            "Missing required environment variables for Auth0 auth: "
+            + ", ".join(auth_missing)
+        )
+
     return Settings(
         azure_openai_endpoint=endpoint,
         azure_openai_api_key=api_key,
@@ -55,4 +82,7 @@ def get_settings() -> Settings:
         azure_openai_api_version=api_version,
         chat_db_path=chat_db_path,
         max_history_turns=max_history_turns,
+        auth0_domain=auth0_domain,
+        auth0_audience=auth0_audience,
+        auth0_issuer=auth0_issuer,
     )
